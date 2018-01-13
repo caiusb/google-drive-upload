@@ -12,7 +12,8 @@
 
 CLIENT_ID=""
 CLIENT_SECRET=""
-SCOPE=${SCOPE:-"https://docs.google.com/feeds"}
+SCOPE=${SCOPE:-"https://www.googleapis.com/auth/drive.file"}
+#SCOPE=${SCOPE:-"https://docs.google.com/feeds"}
 
 if [ -e $HOME/.googledrive.conf ]
 then
@@ -37,7 +38,7 @@ fi
 function jsonValue() {
 KEY=$1
 num=$2
-awk -F"[:,}][^:\/\/]" '{for(i=1;i<=NF;i++){if($i~/\042'$KEY'\042/){print $(i+1)}}}' | tr -d '"' | sed -n ${num}p | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[,]*$//'
+awk -F"[:,}][^://]" '{for(i=1;i<=NF;i++){if($i~/\042'$KEY'\042/){print $(i+1)}}}' | tr -d '"' | sed -n ${num}p | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[,]*$//'
 }
 
 if [ "$1" == "create" ]; then
