@@ -273,17 +273,32 @@ else
 fi
 	log "Folder ID for folder name $FOLDERNAME : $FOLDER_ID"
 
+function uploadFolder(){
+    FOLDERNAME=$(basename $1)
+    ROOT_FOLDER=$2
+    ACCESSS_TOKEN=$3
+    FOLDER_ID=`createDirectory "$FOLDERNAME" "$ROOT_FOLDER" "$ACCESS_TOKEN"`
+    for file in "$FILE"/*;
+        do
+        #uploadFile "$file" "$FOLDER_ID" "$ACCESS_TOKEN"
+        upload $file $FOLDER_ID $ACCESS_TOKEN
+    done
+
+}
+
 # Check whether the given file argument is valid and check whether the argument is file or directory.
 # based on the type, if the argument is directory do a recursive upload.
-if [ ! -z "$FILE" ]; then
-	if [ -f "$FILE" ];then
-		uploadFile "$FILE" "$FOLDER_ID" "$ACCESS_TOKEN"
-	elif [ -d "$FILE" ];then
-			FOLDERNAME=$(basename $FILE)
-			FOLDER_ID=`createDirectory "$FOLDERNAME" "$ROOT_FOLDER" "$ACCESS_TOKEN"`
-			for file in $(find "$FILE" -type f);
-			do
-				uploadFile "$file" "$FOLDER_ID" "$ACCESS_TOKEN"
-			done
-	fi
-fi
+function upload() {
+    FILE=$1
+    FOLDER_ID=$2
+    ACCESS_TOKEN=$3
+    if [ ! -z "$FILE" ]; then
+        if [ -f "$FILE" ];then
+            uploadFile "$FILE" "$FOLDER_ID" "$ACCESS_TOKEN"
+        elif [ -d "$FILE" ];then
+            uploadFolder $FILE $FOLDER_ID $ACCESS_TOKEN
+        fi
+    fi
+}
+
+upload "$FILE" "$ROOT_FOLDER" "$ACCESS_TOKEN"
