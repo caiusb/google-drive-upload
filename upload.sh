@@ -25,7 +25,8 @@ ROOT_FOLDER=""
 CLIENT_ID=""
 CLIENT_SECRET=""
 REFRESH_TOKEN=""
-SCOPE=${SCOPE:-"https://docs.google.com/feeds"}
+#SCOPE=${SCOPE:-"https://docs.google.com/feeds"}
+SCOPE=${SCOPE:-"https://www.googleapis.com/auth/drive.file"}
 
 #Internal variable
 ACCESS_TOKEN=""
@@ -125,21 +126,21 @@ function createDirectory(){
 					--silent \
 					-XGET \
 					-H "Authorization: Bearer ${ACCESS_TOKEN}" \
-					 "https://www.googleapis.com/drive/v2/files/${ROOTDIR}/children?orderBy=title&q=${QUERY}&fields=items%2Fid"`
+					 "https://www.googleapis.com/drive/v3/files/${ROOTDIR}/children?orderBy=title&q=${QUERY}&fields=items%2Fid&supportsTeamDrives=true"`
 
 	FOLDER_ID=`echo $SEARCH_RESPONSE | jsonValue id`
 
 
 	if [ -z "$FOLDER_ID" ]
 	then
-		CREATE_FOLDER_POST_DATA="{\"mimeType\": \"application/vnd.google-apps.folder\",\"title\": \"$DIRNAME\",\"parents\": [{\"id\": \"$ROOTDIR\"}]}"
+		CREATE_FOLDER_POST_DATA="{\"mimeType\": \"application/vnd.google-apps.folder\",\"name\": \"$DIRNAME\",\"parents\": [\"$ROOTDIR\"]}"
 		CREATE_FOLDER_RESPONSE=`/usr/bin/curl \
 								--silent  \
 								-X POST \
 								-H "Authorization: Bearer ${ACCESS_TOKEN}" \
 								-H "Content-Type: application/json; charset=UTF-8" \
 								-d "$CREATE_FOLDER_POST_DATA" \
-								"https://www.googleapis.com/drive/v2/files?fields=id"`
+								"https://www.googleapis.com/drive/v3/files?supportsTeamDrives=true"`
 		FOLDER_ID=`echo $CREATE_FOLDER_RESPONSE | jsonValue id`
 
 	fi
@@ -167,7 +168,7 @@ function uploadFile(){
 	FILESIZE=$(stat -c%s "$FILE")
 
 	# JSON post data to specify the file name and folder under while the file to be created
-	postData="{\"mimeType\": \"$MIME_TYPE\",\"title\": \"$SLUG\",\"parents\": [{\"id\": \"$FOLDER_ID\"}]}"
+	postData="{\"mimeType\": \"$MIME_TYPE\",\"name\": \"$SLUG\",\"parents\": [\"$FOLDER_ID\"]}"
 	postDataSize=$(echo $postData | wc -c)
 
 	# Curl command to initiate resumable upload session and grab the location URL
@@ -181,7 +182,7 @@ function uploadFile(){
 				-H "X-Upload-Content-Type: $MIME_TYPE" \
 				-H "X-Upload-Content-Length: $FILESIZE" \
 				-d "$postData" \
-				"https://www.googleapis.com/upload/drive/v2/files?uploadType=resumable" \
+				"https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&supportsTeamDrives=true" \
 				--dump-header - | sed -ne s/"Location: "//pi | tr -d '\r\n'`
 
 	# Curl command to push the file to google drive.
